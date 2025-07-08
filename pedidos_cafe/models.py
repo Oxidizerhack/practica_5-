@@ -7,7 +7,7 @@ class PedidoCafe(models.Model):
         ("americano", "Americano"),
         ("latte", "Latte"),
     ])
-    ingredientes = models.JSONField(default=list, blank=True)  
+    ingredientes = models.CharField(max_length=255) 
     tamano = models.CharField(max_length=10, choices=[
         ("pequeno", "Pequeño"),
         ("mediano", "Mediano"),

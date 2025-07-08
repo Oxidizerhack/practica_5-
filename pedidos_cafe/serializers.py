@@ -25,27 +25,44 @@ class PedidoCafeSerializer(serializers.ModelSerializer):
             "precio_total",
             "ingredientes_finales"
         ]
+    
     def get_ingredientes_texto(self, obj):
-        return ", ".join(obj.ingredientes)
+        if isinstance(obj.ingredientes, list):
+            return ", ".join(obj.ingredientes)
+        return ""
 
     def get_precio_total(self, obj):
-        cafeteria = CafeFactory.obtener_base(obj.tipo_base)
-        constructor = CafeteriaPersonalizadaBuilder(cafeteria)
-        director = DirectorDelCafe(constructor)
-        director.construir(obj.ingredientes, obj.tamano)
-
-        lista_ingredientes = [i.strip() for i in obj.ingredientes.split(",") if i.strip()]
-        director.construir(lista_ingredientes, obj.tamano)
-
+        try:
+            # Usar Factory para crear el café base
+            cafeteria = CafeFactory.obtener_base(obj.tipo_base)
+            
+            # Usar Builder para construir el pedido completo
+            constructor = CafeteriaPersonalizadaBuilder(cafeteria)
+            director = DirectorDelCafe(constructor)
+            director.construir(obj.ingredientes, obj.tamano)
+            
+            # Registrar la operación con Singleton
+            Registrador.instancia().agregar_log(f"[precio_total] Calculado para pedido {obj.id}: ${constructor.obtener_precio()}")
+            
+            return constructor.obtener_precio()  
+        except Exception as e:
+            Registrador.instancia().agregar_log(f"[ERROR] No se pudo calcular precio para pedido {obj.id}: {str(e)}")
+            return 0
 
     def get_ingredientes_finales(self, obj):
-        cafeteria = CafeFactory.obtener_base(obj.tipo_base)
-        constructor = CafeteriaPersonalizadaBuilder(cafeteria)
-        director = DirectorDelCafe(constructor)
-        director.construir(obj.ingredientes, obj.tamano)
-
-        lista_ingredientes = [i.strip() for i in obj.ingredientes.split(",") if i.strip()]
-        director.construir(lista_ingredientes, obj.tamano)
-
-        Registrador.instancia().agregar_log(f"[ingredientes_finales] Obtenidos para el pedido {obj.id}")
-        return constructor.obtener_ingredientes_finales()
+        try:
+            # Usar Factory para crear el café base
+            cafeteria = CafeFactory.obtener_base(obj.tipo_base)
+            
+            # Usar Builder para construir el pedido completo
+            constructor = CafeteriaPersonalizadaBuilder(cafeteria)
+            director = DirectorDelCafe(constructor)
+            director.construir(obj.ingredientes, obj.tamano)
+            
+            # Registrar la operación con Singleton
+            Registrador.instancia().agregar_log(f"[ingredientes_finales] Obtenidos para el pedido {obj.id}")
+            
+            return constructor.obtener_ingredientes_finales()
+        except Exception as e:
+            Registrador.instancia().agregar_log(f"[ERROR] No se pudieron obtener ingredientes finales para pedido {obj.id}: {str(e)}")
+            return []
